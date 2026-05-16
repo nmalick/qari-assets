@@ -4243,5 +4243,11 @@
     "sha256": "4bf9549dfcfd367d4d4b151bd58b51af63b677d1c980cf5e52541c2f981d7e6d",
     "sizeBytes": 2437120,
     "rowCount": 83668
+  },
+  "license": {
+    "filename": "LICENSE.txt",
+    "source": "https://openhub.net/licenses/KFGQPC",
+    "sha256": "2e8be4270aaa6d7368c286147f4dec2a65a2b35b76ae26227a5339934272db60",
+    "sizeBytes": 1324
   }
 }
