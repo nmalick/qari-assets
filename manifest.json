@@ -1,11 +1,10 @@
 {
   "schemaVersion": 2,
   "releaseTag": "v1.1.0",
-  "generatedAt": "2026-05-21T14:21:51+00:00",
-  "baseUrl": "https://raw.githubusercontent.com/nmalick/qari-assets/qari-assets/",
+  "generatedAt": "2026-05-21T18:40:36+00:00",
+  "baseUrl": "https://raw.githubusercontent.com/nmalick/qari-assets/qari-assets-2/",
   "wordsDb": {
     "filename": "qpc-v4.db",
-    "role": "Maps word_index -> Arabic Presentation Forms codepoint string. Join key for layout DB and fonts. Schema: words(id, location, surah, ayah, word, text).",
     "sha256": "4bf9549dfcfd367d4d4b151bd58b51af63b677d1c980cf5e52541c2f981d7e6d",
     "sizeBytes": 2437120,
     "rowCount": 83668
@@ -4257,7 +4256,7 @@
       "familyPattern": "QCF4{NNN}_COLOR",
       "tajweedColored": true,
       "fontCount": 604,
-      "totalSizeBytes": 169423944,
+      "totalSizeBytes": 166986824,
       "fonts": [
         {
           "page": 1,
@@ -8492,7 +8491,6 @@
   },
   "license": {
     "filename": "LICENSE.txt",
-    "source": "https://openhub.net/licenses/KFGQPC",
     "sha256": "2e8be4270aaa6d7368c286147f4dec2a65a2b35b76ae26227a5339934272db60",
     "sizeBytes": 1324
   }
