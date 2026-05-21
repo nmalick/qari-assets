@@ -1,7 +1,16 @@
-"""Build manifest.json for the v4-tajweed font set.
+"""Build manifest.json (schemaVersion 2) by scanning on-disk variant dirs.
 
-Produces a manifest matching the schema in qari/plans/qpc-traditional-remote-assets.md
-section 1.4, adapted for the per-page model and the v4-tajweed variant.
+Walks each `fonts/<variantId>/` directory in this repo and emits a fresh
+manifest.json with per-page SHA-256s and sizes. Adding a new variant is a
+matter of dropping its TTFs under `fonts/<new-id>/` and adding an entry
+to `_VARIANTS` below.
+
+Run from the repo root:
+
+    python3 _build_manifest.py
+
+The script reads/writes paths relative to its own location, so it works
+regardless of the cwd.
 """
 import hashlib
 import json
@@ -10,94 +19,174 @@ import struct
 import sys
 from datetime import datetime, timezone
 
-FONT_DIR = "fonts/v4-tajweed"
-OUT_PATH = "manifest.json"
+REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+MANIFEST_PATH = os.path.join(REPO_ROOT, "manifest.json")
+WORDS_DB = "qpc-v4.db"
+LICENSE_FILE = "LICENSE.txt"
 TOTAL_PAGES = 604
 TTF_MAGICS = {b"\x00\x01\x00\x00", b"true", b"OTTO"}
 
+# Variant id → (displayName, fontDir, familyPattern, tajweedColored).
+# `familyPattern` uses {NNN} as a zero-padded 3-digit page number.
+_VARIANTS = {
+    "v1-madina": (
+        "Madina Mushaf V1 (1405H)",
+        "fonts/v1/",
+        "QCF_P{NNN}",
+        False,
+    ),
+    "v4-tajweed": (
+        "QPC v4 Tajweed (1441H)",
+        "fonts/v4-tajweed/",
+        "QCF4{NNN}_COLOR",
+        True,
+    ),
+}
 
-def parse_family(path: str) -> str:
+
+def _parse_family(path):
+    """Parse the TTF `name` table and return the family name (nameID=1)."""
     with open(path, "rb") as f:
         data = f.read()
     num_tables = struct.unpack(">H", data[4:6])[0]
-    name_off, name_len = None, None
+    name_off = None
     for i in range(num_tables):
         off = 12 + i * 16
         tag = data[off:off + 4]
         if tag == b"name":
             name_off = struct.unpack(">I", data[off + 8:off + 12])[0]
-            name_len = struct.unpack(">I", data[off + 12:off + 16])[0]
             break
-    if not name_off:
+    if name_off is None:
         return ""
-    fmt, count, string_offset = struct.unpack(">HHH", data[name_off:name_off + 6])
+    _, count, string_offset = struct.unpack(">HHH", data[name_off:name_off + 6])
     storage = name_off + string_offset
     for i in range(count):
         rec = name_off + 6 + i * 12
-        platform_id, encoding_id, language_id, name_id, length, offset = struct.unpack(
+        platform_id, _encoding_id, _language_id, name_id, length, offset = struct.unpack(
             ">HHHHHH", data[rec:rec + 12]
         )
         if name_id == 1:
             s = data[storage + offset:storage + offset + length]
             try:
-                return s.decode("utf-16-be" if platform_id == 3 else "mac-roman", errors="replace")
+                return s.decode(
+                    "utf-16-be" if platform_id == 3 else "mac-roman",
+                    errors="replace",
+                )
             except Exception:
                 continue
     return ""
 
 
-def main() -> int:
+def _file_sha256(path):
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest(), os.path.getsize(path)
+
+
+def _build_variant(variant_id, display_name, font_dir, family_pattern, tajweed_colored):
     fonts = []
+    total = 0
     bad = []
+    abs_dir = os.path.join(REPO_ROOT, font_dir)
     for p in range(1, TOTAL_PAGES + 1):
-        path = os.path.join(FONT_DIR, f"p{p}.ttf")
+        filename = f"p{p}.ttf"
+        path = os.path.join(abs_dir, filename)
         if not os.path.exists(path):
             bad.append((p, "missing file"))
             continue
         with open(path, "rb") as f:
-            data = f.read()
-        if data[:4] not in TTF_MAGICS:
-            bad.append((p, f"bad magic {data[:4]!r}"))
+            head = f.read(4)
+        if head not in TTF_MAGICS:
+            bad.append((p, f"bad TTF magic {head!r}"))
             continue
-        fam = parse_family(path)
-        expected_family_prefix = f"QCF4{p:03d}_"
-        if not fam.startswith(expected_family_prefix):
-            bad.append((p, f"family mismatch: expected {expected_family_prefix}* got {fam!r}"))
+        family = _parse_family(path)
+        expected = family_pattern.replace("{NNN}", f"{p:03d}")
+        # V4 family names have trailing `_COLOR` suffix; V1 is exact.
+        # Accept either a prefix match (V4) or exact match (V1).
+        if not (family == expected or family.startswith(expected.rstrip("_"))):
+            bad.append(
+                (p, f"family mismatch: expected {expected!r} got {family!r}"))
             continue
+        sha, size = _file_sha256(path)
         fonts.append({
             "page": p,
-            "filename": f"p{p}.ttf",
-            "family": fam,
-            "sha256": hashlib.sha256(data).hexdigest(),
-            "sizeBytes": len(data),
+            "filename": filename,
+            "family": family,
+            "sha256": sha,
+            "sizeBytes": size,
         })
+        total += size
 
-    if bad:
-        print("VALIDATION FAILURES:", file=sys.stderr)
-        for p, why in bad:
-            print(f"  p{p}: {why}", file=sys.stderr)
+    return {
+        "id": variant_id,
+        "displayName": display_name,
+        "pageCount": TOTAL_PAGES,
+        "fontDir": font_dir,
+        "familyPattern": family_pattern,
+        "tajweedColored": tajweed_colored,
+        "fontCount": len(fonts),
+        "totalSizeBytes": total,
+        "fonts": fonts,
+    }, bad
+
+
+def main():
+    variants = {}
+    all_bad = []
+    for vid, (display, font_dir, pattern, colored) in _VARIANTS.items():
+        v, bad = _build_variant(vid, display, font_dir, pattern, colored)
+        all_bad.extend((vid, p, why) for p, why in bad)
+        # Strip the duplicated `id` key — it's already the variant's map key.
+        v.pop("id")
+        variants[vid] = v
+        print(f"  {vid}: {v['fontCount']} fonts, "
+              f"{v['totalSizeBytes'] / 1024 / 1024:.1f} MB")
+
+    if all_bad:
+        print("\nVALIDATION FAILURES:", file=sys.stderr)
+        for vid, p, why in all_bad:
+            print(f"  {vid} p{p}: {why}", file=sys.stderr)
         return 1
 
-    total_bytes = sum(f["sizeBytes"] for f in fonts)
+    words_path = os.path.join(REPO_ROOT, WORDS_DB)
+    words_sha, words_size = _file_sha256(words_path)
+
+    license_path = os.path.join(REPO_ROOT, LICENSE_FILE)
+    license_sha, license_size = _file_sha256(license_path)
+
+    # Preserve the existing wordsDb `rowCount` if available so we don't
+    # need to query SQLite from this script.
+    row_count = None
+    if os.path.exists(MANIFEST_PATH):
+        try:
+            with open(MANIFEST_PATH) as f:
+                existing = json.load(f)
+            row_count = (existing.get("wordsDb") or {}).get("rowCount")
+        except Exception:
+            pass
+
     manifest = {
-        "schemaVersion": 1,
-        "releaseTag": "v1.0.0",
+        "schemaVersion": 2,
+        "releaseTag": "v1.1.0",
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "variant": "v4-tajweed",
-        "source": "https://static-cdn.tarteel.ai/qul/fonts/quran_fonts/v4-tajweed/ttf",
-        "baseUrl": "https://github.com/nmalick/qari-assets/releases/download/v1.0.0",
-        "fontCount": len(fonts),
-        "totalSizeBytes": total_bytes,
-        "fonts": fonts,
+        "baseUrl":
+            "https://raw.githubusercontent.com/nmalick/qari-assets/qari-assets-2/",
+        "wordsDb": {
+            "filename": WORDS_DB,
+            "sha256": words_sha,
+            "sizeBytes": words_size,
+            **({"rowCount": row_count} if row_count is not None else {}),
+        },
+        "variants": variants,
+        "license": {
+            "filename": LICENSE_FILE,
+            "sha256": license_sha,
+            "sizeBytes": license_size,
+        },
     }
-    with open(OUT_PATH, "w") as f:
+
+    with open(MANIFEST_PATH, "w") as f:
         json.dump(manifest, f, indent=2)
-    print(f"Wrote {OUT_PATH} with {len(fonts)} fonts, {total_bytes / 1024 / 1024:.1f} MB total")
-    # Spot-check a few
-    print("\nSample entries:")
-    for p in (1, 100, 300, 604):
-        e = fonts[p - 1]
-        print(f"  p{p:>3}  {e['family']:20s}  {e['sizeBytes']:>7} bytes  sha256={e['sha256'][:16]}...")
+    print(f"\nWrote {os.path.relpath(MANIFEST_PATH, REPO_ROOT)}")
     return 0
 
 
