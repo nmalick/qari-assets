@@ -14,13 +14,28 @@ clients still on schemaVersion 2 keep parsing — they'll use the V4 DB for
 both variants (the V1 rendering bug pre-fix behavior), which is no worse
 than what they had before.
 
-Run from anywhere:
+Usage (during development — defaults are fine):
 
     python3 _build_manifest.py
+
+Usage (cutting a release):
+
+    python3 _build_manifest.py --ref qari-assets-6 --release-tag v1.3.0
+
+The `--ref` value is baked into the manifest's `baseUrl` field. Match it
+to the git tag you intend to create alongside this manifest (the Flutter
+client SHA-verifies font bytes, so the tag must point at the commit
+containing this manifest). Defaults — when no flag and no env var is set
+— to `main`, which is fine for development (raw.githubusercontent.com
+serves the latest commit on main).
+
+Both flags also accept env-var fallbacks: `QARI_ASSETS_REF` and
+`QARI_ASSETS_RELEASE_TAG`.
 
 The script reads/writes paths relative to its own location, so it works
 regardless of the cwd.
 """
+import argparse
 import hashlib
 import json
 import os
@@ -34,6 +49,12 @@ MANIFEST_PATH = os.path.join(REPO_ROOT, "manifest.json")
 LICENSE_FILE = "LICENSE.txt"
 TOTAL_PAGES = 604
 TTF_MAGICS = {b"\x00\x01\x00\x00", b"true", b"OTTO"}
+
+# Defaults when no CLI flag and no env var is set. `main` resolves on the
+# raw.githubusercontent.com CDN to the latest commit, which is what
+# development reads should see.
+_DEFAULT_REF = "main"
+_DEFAULT_RELEASE_TAG = "v1.2.0"
 
 # Variant id → variant config. Each value is a tuple:
 #   (displayName, fontDir, familyPattern, tajweedColored, wordsDbFilename)
@@ -164,7 +185,38 @@ def _build_variant(variant_id, display_name, font_dir, family_pattern,
     }, bad
 
 
-def main():
+def _parse_args(argv):
+    parser = argparse.ArgumentParser(
+        description="Build manifest.json (schemaVersion 3) for qari-assets.",
+    )
+    parser.add_argument(
+        "--ref",
+        default=os.environ.get("QARI_ASSETS_REF", _DEFAULT_REF),
+        help=(
+            "Git ref baked into the manifest's `baseUrl` field "
+            "(e.g. qari-assets-6, main). Falls back to the QARI_ASSETS_REF "
+            f"env var, then to {_DEFAULT_REF!r}."
+        ),
+    )
+    parser.add_argument(
+        "--release-tag",
+        default=os.environ.get("QARI_ASSETS_RELEASE_TAG", _DEFAULT_RELEASE_TAG),
+        help=(
+            "Value for the manifest's `releaseTag` field "
+            "(e.g. v1.3.0). Falls back to the QARI_ASSETS_RELEASE_TAG env "
+            f"var, then to {_DEFAULT_RELEASE_TAG!r}."
+        ),
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv=None):
+    args = _parse_args(argv)
+    base_url = (
+        f"https://raw.githubusercontent.com/nmalick/qari-assets/{args.ref}/"
+    )
+    print(f"  baseUrl:    {base_url}")
+    print(f"  releaseTag: {args.release_tag}")
     variants = {}
     all_bad = []
     for vid, (display, font_dir, pattern, colored,
@@ -194,10 +246,9 @@ def main():
 
     manifest = {
         "schemaVersion": 3,
-        "releaseTag": "v1.2.0",
+        "releaseTag": args.release_tag,
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "baseUrl":
-            "https://raw.githubusercontent.com/nmalick/qari-assets/qari-assets-4/",
+        "baseUrl": base_url,
         "wordsDb": top_level_words_db,
         "variants": variants,
         "license": {
