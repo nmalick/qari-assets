@@ -1,8 +1,8 @@
 {
-  "schemaVersion": 2,
-  "releaseTag": "v1.1.0",
-  "generatedAt": "2026-05-21T18:40:36+00:00",
-  "baseUrl": "https://raw.githubusercontent.com/nmalick/qari-assets/qari-assets-2/",
+  "schemaVersion": 3,
+  "releaseTag": "v1.2.0",
+  "generatedAt": "2026-05-22T04:07:18+00:00",
+  "baseUrl": "https://raw.githubusercontent.com/nmalick/qari-assets/qari-assets-4/",
   "wordsDb": {
     "filename": "qpc-v4.db",
     "sha256": "4bf9549dfcfd367d4d4b151bd58b51af63b677d1c980cf5e52541c2f981d7e6d",
@@ -11,13 +11,19 @@
   },
   "variants": {
     "v1-madina": {
-      "displayName": "Madina Mushaf V1 (1405H)",
+      "displayName": "Madina Mushaf v1 1405H",
       "pageCount": 604,
       "fontDir": "fonts/v1/",
       "familyPattern": "QCF_P{NNN}",
       "tajweedColored": false,
       "fontCount": 604,
       "totalSizeBytes": 95020860,
+      "wordsDb": {
+        "filename": "qpc-v1.db",
+        "sha256": "8e3ab8bfe60ae20af8b6ddd28eb95d2262b01cc285477b831e267ad4360972cc",
+        "sizeBytes": 2437120,
+        "rowCount": 83668
+      },
       "fonts": [
         {
           "page": 1,
@@ -4250,13 +4256,19 @@
       ]
     },
     "v4-tajweed": {
-      "displayName": "QPC v4 Tajweed (1441H)",
+      "displayName": "Madina Mushaf v4 1441H",
       "pageCount": 604,
       "fontDir": "fonts/v4-tajweed/",
       "familyPattern": "QCF4{NNN}_COLOR",
       "tajweedColored": true,
       "fontCount": 604,
       "totalSizeBytes": 166986824,
+      "wordsDb": {
+        "filename": "qpc-v4.db",
+        "sha256": "4bf9549dfcfd367d4d4b151bd58b51af63b677d1c980cf5e52541c2f981d7e6d",
+        "sizeBytes": 2437120,
+        "rowCount": 83668
+      },
       "fonts": [
         {
           "page": 1,

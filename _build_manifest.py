@@ -1,11 +1,20 @@
-"""Build manifest.json (schemaVersion 2) by scanning on-disk variant dirs.
+"""Build manifest.json (schemaVersion 3) by scanning on-disk variant dirs.
 
-Walks each `fonts/<variantId>/` directory in this repo and emits a fresh
-manifest.json with per-page SHA-256s and sizes. Adding a new variant is a
-matter of dropping its TTFs under `fonts/<new-id>/` and adding an entry
-to `_VARIANTS` below.
+Walks each `fonts/<variantId>/` directory in this repo and pairs it with the
+corresponding words DB (one per variant — V1 and V4 use different PUA glyph
+encodings, so a shared words DB would render the wrong ligatures in the
+mismatched font set). Emits a fresh manifest.json with per-page SHA-256s,
+sizes, and per-variant `wordsDb` blocks.
 
-Run from the repo root:
+Adding a new variant: drop its TTFs under `fonts/<new-id>/`, commit its
+words DB at the repo root, and append an entry to `_VARIANTS` below.
+
+The top-level `wordsDb` field is preserved (pointing at the V4 DB) so
+clients still on schemaVersion 2 keep parsing — they'll use the V4 DB for
+both variants (the V1 rendering bug pre-fix behavior), which is no worse
+than what they had before.
+
+Run from anywhere:
 
     python3 _build_manifest.py
 
@@ -15,33 +24,41 @@ regardless of the cwd.
 import hashlib
 import json
 import os
+import sqlite3
 import struct
 import sys
 from datetime import datetime, timezone
 
 REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 MANIFEST_PATH = os.path.join(REPO_ROOT, "manifest.json")
-WORDS_DB = "qpc-v4.db"
 LICENSE_FILE = "LICENSE.txt"
 TOTAL_PAGES = 604
 TTF_MAGICS = {b"\x00\x01\x00\x00", b"true", b"OTTO"}
 
-# Variant id → (displayName, fontDir, familyPattern, tajweedColored).
+# Variant id → variant config. Each value is a tuple:
+#   (displayName, fontDir, familyPattern, tajweedColored, wordsDbFilename)
 # `familyPattern` uses {NNN} as a zero-padded 3-digit page number.
 _VARIANTS = {
     "v1-madina": (
-        "Madina Mushaf V1 (1405H)",
+        "Madina Mushaf v1 1405H",
         "fonts/v1/",
         "QCF_P{NNN}",
         False,
+        "qpc-v1.db",
     ),
     "v4-tajweed": (
-        "QPC v4 Tajweed (1441H)",
+        "Madina Mushaf v4 1441H",
         "fonts/v4-tajweed/",
         "QCF4{NNN}_COLOR",
         True,
+        "qpc-v4.db",
     ),
 }
+
+# The variant whose words DB also lives at the top level for schemaVersion 2
+# back-compat. Clients on v2 ignore the per-variant `wordsDb` and read this
+# instead — they get the V4 DB, which is the same as their existing behavior.
+_BACKCOMPAT_WORDS_DB_VARIANT = "v4-tajweed"
 
 
 def _parse_family(path):
@@ -82,7 +99,25 @@ def _file_sha256(path):
         return hashlib.sha256(f.read()).hexdigest(), os.path.getsize(path)
 
 
-def _build_variant(variant_id, display_name, font_dir, family_pattern, tajweed_colored):
+def _words_db_block(filename):
+    """Build the {filename, sha256, sizeBytes, rowCount} block for a words DB."""
+    abs_path = os.path.join(REPO_ROOT, filename)
+    sha, size = _file_sha256(abs_path)
+    row_count = None
+    try:
+        con = sqlite3.connect(abs_path)
+        row_count = con.execute("SELECT COUNT(*) FROM words").fetchone()[0]
+        con.close()
+    except Exception as e:
+        print(f"  ⚠️  {filename}: could not query row_count ({e})", file=sys.stderr)
+    block = {"filename": filename, "sha256": sha, "sizeBytes": size}
+    if row_count is not None:
+        block["rowCount"] = row_count
+    return block
+
+
+def _build_variant(variant_id, display_name, font_dir, family_pattern,
+                   tajweed_colored, words_db_filename):
     fonts = []
     total = 0
     bad = []
@@ -117,7 +152,6 @@ def _build_variant(variant_id, display_name, font_dir, family_pattern, tajweed_c
         total += size
 
     return {
-        "id": variant_id,
         "displayName": display_name,
         "pageCount": TOTAL_PAGES,
         "fontDir": font_dir,
@@ -125,6 +159,7 @@ def _build_variant(variant_id, display_name, font_dir, family_pattern, tajweed_c
         "tajweedColored": tajweed_colored,
         "fontCount": len(fonts),
         "totalSizeBytes": total,
+        "wordsDb": _words_db_block(words_db_filename),
         "fonts": fonts,
     }, bad
 
@@ -132,14 +167,16 @@ def _build_variant(variant_id, display_name, font_dir, family_pattern, tajweed_c
 def main():
     variants = {}
     all_bad = []
-    for vid, (display, font_dir, pattern, colored) in _VARIANTS.items():
-        v, bad = _build_variant(vid, display, font_dir, pattern, colored)
+    for vid, (display, font_dir, pattern, colored,
+              words_db_filename) in _VARIANTS.items():
+        v, bad = _build_variant(vid, display, font_dir, pattern, colored,
+                                words_db_filename)
         all_bad.extend((vid, p, why) for p, why in bad)
-        # Strip the duplicated `id` key — it's already the variant's map key.
-        v.pop("id")
         variants[vid] = v
+        wb = v["wordsDb"]
         print(f"  {vid}: {v['fontCount']} fonts, "
-              f"{v['totalSizeBytes'] / 1024 / 1024:.1f} MB")
+              f"{v['totalSizeBytes'] / 1024 / 1024:.1f} MB; "
+              f"wordsDb {wb['filename']} ({wb.get('rowCount','?')} rows)")
 
     if all_bad:
         print("\nVALIDATION FAILURES:", file=sys.stderr)
@@ -147,35 +184,21 @@ def main():
             print(f"  {vid} p{p}: {why}", file=sys.stderr)
         return 1
 
-    words_path = os.path.join(REPO_ROOT, WORDS_DB)
-    words_sha, words_size = _file_sha256(words_path)
-
     license_path = os.path.join(REPO_ROOT, LICENSE_FILE)
     license_sha, license_size = _file_sha256(license_path)
 
-    # Preserve the existing wordsDb `rowCount` if available so we don't
-    # need to query SQLite from this script.
-    row_count = None
-    if os.path.exists(MANIFEST_PATH):
-        try:
-            with open(MANIFEST_PATH) as f:
-                existing = json.load(f)
-            row_count = (existing.get("wordsDb") or {}).get("rowCount")
-        except Exception:
-            pass
+    # Top-level wordsDb for schemaVersion-2 client back-compat. New clients
+    # on v3 ignore this and read each variant's own wordsDb block.
+    backcompat_filename = _VARIANTS[_BACKCOMPAT_WORDS_DB_VARIANT][4]
+    top_level_words_db = _words_db_block(backcompat_filename)
 
     manifest = {
-        "schemaVersion": 2,
-        "releaseTag": "v1.1.0",
+        "schemaVersion": 3,
+        "releaseTag": "v1.2.0",
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "baseUrl":
-            "https://raw.githubusercontent.com/nmalick/qari-assets/qari-assets-2/",
-        "wordsDb": {
-            "filename": WORDS_DB,
-            "sha256": words_sha,
-            "sizeBytes": words_size,
-            **({"rowCount": row_count} if row_count is not None else {}),
-        },
+            "https://raw.githubusercontent.com/nmalick/qari-assets/qari-assets-4/",
+        "wordsDb": top_level_words_db,
         "variants": variants,
         "license": {
             "filename": LICENSE_FILE,
