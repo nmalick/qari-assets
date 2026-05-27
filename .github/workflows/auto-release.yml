@@ -1,0 +1,112 @@
+name: Auto-tag + release on main
+
+# Cuts a new `qari-assets-N` release every time main moves. The Flutter
+# client pins its asset base URL to a specific tag at build time, so each
+# main → tag → release cycle gives the app team a stable anchor without
+# anyone manually touching the GitHub Releases page.
+#
+# Trigger: any push to main (including merged PRs).
+# Versioning: highest existing `qari-assets-N` + 1. Gaps in the sequence
+# are tolerated — qari-assets-4 was never cut; the bumper still walks
+# qari-assets-5 → qari-assets-6 → … just fine.
+
+on:
+  push:
+    branches: [main]
+    # Optional path filter — uncomment to skip releases on doc-only commits.
+    # When enabled, README tweaks and build-script changes won't burn a
+    # tag number. Asset/manifest changes will still trigger a release.
+    # paths:
+    #   - 'manifest.json'
+    #   - 'fonts/**'
+    #   - 'qpc-*.db'
+    #   - '*.ttf'
+    #   - '*.otf'
+    #   - 'LICENSE.txt'
+  # Manual fallback for backfilling missed releases or recovering from
+  # an aborted run. Same behavior as a push.
+  workflow_dispatch:
+
+# Serialize releases. If two pushes land within seconds of each other,
+# the second one waits for the first to finish — never cancels it,
+# because half-released tags are worse than late releases.
+concurrency:
+  group: auto-release
+  cancel-in-progress: false
+
+permissions:
+  # Required for both `git push origin <tag>` and `gh release create`.
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Commit-message opt-out for cases where you intentionally don't
+    # want a release (e.g. force-pushing a fix to revert a bad asset).
+    if: "!contains(github.event.head_commit.message, '[skip release]')"
+    steps:
+      - name: Checkout (with full tag history)
+        uses: actions/checkout@v4
+        with:
+          # Need the full tag list to compute the next number. Shallow
+          # clones don't include tags.
+          fetch-depth: 0
+
+      - name: Compute next qari-assets-N
+        id: bump
+        run: |
+          set -euo pipefail
+          # Match strictly `qari-assets-<integer>` — defends against any
+          # `qari-assets-rc1` or other ad-hoc tag styles that might creep
+          # in later. `sort -n` does numeric (not lexicographic) order.
+          latest=$(git tag -l 'qari-assets-*' \
+            | grep -E '^qari-assets-[0-9]+$' \
+            | sed 's/qari-assets-//' \
+            | sort -n \
+            | tail -1 \
+            || true)
+          latest=${latest:-0}
+          next=$((latest + 1))
+          tag="qari-assets-${next}"
+          {
+            echo "tag=${tag}"
+            echo "previous=qari-assets-${latest}"
+            echo "has_previous=$([ "$latest" -gt 0 ] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
+          echo "📦 Next release: ${tag} (previous: qari-assets-${latest})"
+
+      - name: Tag the merge commit
+        env:
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Annotated tag (not lightweight) so the release page can show
+          # the auto-release message alongside the auto-generated notes.
+          git tag -a "$TAG" -m "Auto-release $TAG (commit ${GITHUB_SHA::7})"
+          git push origin "$TAG"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG:  ${{ steps.bump.outputs.tag }}
+          PREV: ${{ steps.bump.outputs.previous }}
+          HAS_PREV: ${{ steps.bump.outputs.has_previous }}
+        run: |
+          set -euo pipefail
+          # --generate-notes pulls commit subjects + PR refs from the
+          # range (PREV, HEAD]. The first-ever release has no PREV, so
+          # we fall back to GitHub's default behavior (notes from the
+          # full history, which is fine for a bootstrap).
+          if [ "$HAS_PREV" = "true" ] && git rev-parse --verify "refs/tags/$PREV" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --notes-start-tag "$PREV" \
+              --generate-notes
+          else
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --generate-notes
+          fi
+          echo "✅ Released $TAG"
