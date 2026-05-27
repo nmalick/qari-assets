@@ -1,18 +1,30 @@
-"""Build manifest.json (schemaVersion 3) by scanning on-disk variant dirs.
+"""Build manifest.json (schemaVersion 4) by scanning on-disk variant dirs.
 
-Walks each `fonts/<variantId>/` directory in this repo and pairs it with the
-corresponding words DB (one per variant — V1 and V4 use different PUA glyph
-encodings, so a shared words DB would render the wrong ligatures in the
-mismatched font set). Emits a fresh manifest.json with per-page SHA-256s,
-sizes, and per-variant `wordsDb` blocks.
+Two variant shapes:
 
-Adding a new variant: drop its TTFs under `fonts/<new-id>/`, commit its
-words DB at the repo root, and append an entry to `_VARIANTS` below.
+  * **per-page**     — V1 and V4 use PUA codepoints + 604 per-page fonts
+                       (different glyph encoding per page; can't share fonts
+                       across pages). Each variant pairs with its own
+                       PUA-encoded words DB.
+  * **single-font**  — V2 DK, V1 + Tajweed, Nastaleeq use Unicode shaping +
+                       one OTF/TTF per variant + a shared Hafs Unicode words
+                       DB (`qpc-hafs.db`). One font handles all 604 pages,
+                       Tajweed (when present) is layered as character-level
+                       overlay rather than baked into a COLR table.
+
+Adding a new variant: drop its assets in the right place, append an entry to
+`_VARIANTS` below.
+
+  * per-page:    `fonts/<id>/p1.ttf` … `p604.ttf` + words DB at repo root
+  * single-font: `fonts/<id>/<file>.{otf,ttf}` + words DB at repo root
+                 (the shared `qpc-hafs.db` is fine — manifest entries can
+                 reference the same DB filename; build script handles it)
 
 The top-level `wordsDb` field is preserved (pointing at the V4 DB) so
-clients still on schemaVersion 2 keep parsing — they'll use the V4 DB for
-both variants (the V1 rendering bug pre-fix behavior), which is no worse
-than what they had before.
+schemaVersion-2 clients still parse — they keep their existing behavior.
+The schema bump from 3 → 4 is gated by the new `singleFont` block: a v3
+parser will fail-loud rather than silently misinterpret a single-font
+variant as a per-page one with an empty `fonts` array.
 
 Usage (during development — defaults are fine):
 
@@ -20,7 +32,7 @@ Usage (during development — defaults are fine):
 
 Usage (cutting a release):
 
-    python3 _build_manifest.py --ref qari-assets-6 --release-tag v1.3.0
+    python3 _build_manifest.py --ref qari-assets-6 --release-tag v1.4.0
 
 The `--ref` value is baked into the manifest's `baseUrl` field. Match it
 to the git tag you intend to create alongside this manifest (the Flutter
@@ -54,31 +66,68 @@ TTF_MAGICS = {b"\x00\x01\x00\x00", b"true", b"OTTO"}
 # raw.githubusercontent.com CDN to the latest commit, which is what
 # development reads should see.
 _DEFAULT_REF = "main"
-_DEFAULT_RELEASE_TAG = "v1.2.0"
+_DEFAULT_RELEASE_TAG = "v1.4.0"
 
-# Variant id → variant config. Each value is a tuple:
-#   (displayName, fontDir, familyPattern, tajweedColored, wordsDbFilename)
-# `familyPattern` uses {NNN} as a zero-padded 3-digit page number.
+# Variant id → variant config. Schema v4 dispatches on `mode`:
+#
+#   `per_page`   — 604 per-page fonts under `fontDir`, families follow
+#                  `familyPattern` (`{NNN}` is a zero-padded page number).
+#   `single_font` — one OTF/TTF at `fontDir + singleFontFile`. `familyPattern`
+#                  is ignored (set to None); manifest emits a `singleFont`
+#                  block instead of populated `fonts`.
 _VARIANTS = {
-    "v1-madina": (
-        "Madina Mushaf v1 1405H",
-        "fonts/v1/",
-        "QCF_P{NNN}",
-        False,
-        "qpc-v1.db",
-    ),
-    "v4-tajweed": (
-        "Madina Mushaf v4 1441H",
-        "fonts/v4-tajweed/",
-        "QCF4{NNN}_COLOR",
-        True,
-        "qpc-v4.db",
-    ),
+    "v4-tajweed": {
+        "displayName": "Madina Mushaf v4 1441H",
+        "fontDir": "fonts/v4-tajweed/",
+        "familyPattern": "QCF4{NNN}_COLOR",
+        "tajweedColored": True,
+        "wordsDb": "qpc-v4.db",
+        "mode": "per_page",
+    },
+    "v2-dk": {
+        "displayName": "KFGQPC V2 1421H print",
+        "fontDir": "fonts/dk-v2/",
+        "familyPattern": None,
+        "tajweedColored": True,
+        "wordsDb": "qpc-hafs.db",
+        "mode": "single_font",
+        "singleFontFile": "DigitalKhattV2.otf",
+        "pageCount": TOTAL_PAGES,
+    },
+    "v1-madina": {
+        "displayName": "Madina Mushaf v1 1405H",
+        "fontDir": "fonts/v1/",
+        "familyPattern": "QCF_P{NNN}",
+        "tajweedColored": False,
+        "wordsDb": "qpc-v1.db",
+        "mode": "per_page",
+    },
+    "v1-madina-tajweed": {
+        "displayName": "Madina Mushaf v1 + Tajweed",
+        "fontDir": "fonts/dk-v1/",
+        "familyPattern": None,
+        "tajweedColored": True,
+        "wordsDb": "qpc-hafs.db",
+        "mode": "single_font",
+        "singleFontFile": "DigitalKhattQuranicV1.otf",
+        "pageCount": TOTAL_PAGES,
+    },
+    "nastaleeq": {
+        "displayName": "KFGQPC Nastaleeq 15 lines",
+        "fontDir": "fonts/nastaleeq/",
+        "familyPattern": None,
+        "tajweedColored": True,
+        "wordsDb": "qpc-hafs.db",
+        "mode": "single_font",
+        "singleFontFile": "KFGQPCNastaleeq-Regular.ttf",
+        "pageCount": TOTAL_PAGES,
+    },
 }
 
-# The variant whose words DB also lives at the top level for schemaVersion 2
-# back-compat. Clients on v2 ignore the per-variant `wordsDb` and read this
-# instead — they get the V4 DB, which is the same as their existing behavior.
+# The variant whose words DB also lives at the top level for schemaVersion 2/3
+# back-compat. Clients on v2/v3 ignore per-variant `wordsDb` for unknown variant
+# ids and read this instead — they get the V4 DB, which matches their existing
+# behavior for the V4 default.
 _BACKCOMPAT_WORDS_DB_VARIANT = "v4-tajweed"
 
 
@@ -105,9 +154,15 @@ def _parse_family(path):
         )
         if name_id == 1:
             s = data[storage + offset:storage + offset + length]
+            # platformID 0 (Unicode) and 3 (Windows) both store strings as
+            # UTF-16BE. Only platformID 1 (Mac) uses single-byte mac-roman.
+            # Prior versions of this script lumped platform 0 in with mac-roman
+            # which produced garbled \x00-interleaved family strings for OTFs
+            # whose first name record is platform 0 (e.g. the Digital Khatt
+            # fonts) — fixed.
             try:
                 return s.decode(
-                    "utf-16-be" if platform_id == 3 else "mac-roman",
+                    "mac-roman" if platform_id == 1 else "utf-16-be",
                     errors="replace",
                 )
             except Exception:
@@ -137,8 +192,11 @@ def _words_db_block(filename):
     return block
 
 
-def _build_variant(variant_id, display_name, font_dir, family_pattern,
-                   tajweed_colored, words_db_filename):
+def _build_per_page_variant(cfg):
+    """Build a variant entry from a per-page font directory."""
+    display = cfg["displayName"]
+    font_dir = cfg["fontDir"]
+    family_pattern = cfg["familyPattern"]
     fonts = []
     total = 0
     bad = []
@@ -173,21 +231,74 @@ def _build_variant(variant_id, display_name, font_dir, family_pattern,
         total += size
 
     return {
-        "displayName": display_name,
+        "displayName": display,
         "pageCount": TOTAL_PAGES,
         "fontDir": font_dir,
         "familyPattern": family_pattern,
-        "tajweedColored": tajweed_colored,
+        "tajweedColored": cfg["tajweedColored"],
         "fontCount": len(fonts),
         "totalSizeBytes": total,
-        "wordsDb": _words_db_block(words_db_filename),
+        "wordsDb": _words_db_block(cfg["wordsDb"]),
         "fonts": fonts,
     }, bad
 
 
+def _build_single_font_variant(cfg):
+    """Build a variant entry from a single OTF/TTF + shared words DB."""
+    display = cfg["displayName"]
+    font_dir = cfg["fontDir"]
+    font_file = cfg["singleFontFile"]
+    page_count = cfg.get("pageCount", TOTAL_PAGES)
+    bad = []
+    font_path = os.path.join(REPO_ROOT, font_dir, font_file)
+    if not os.path.exists(font_path):
+        bad.append((0, f"missing single font {font_dir}{font_file}"))
+        return None, bad
+    with open(font_path, "rb") as f:
+        head = f.read(4)
+    if head not in TTF_MAGICS:
+        bad.append((0, f"bad TTF/OTF magic {head!r} for {font_file}"))
+        return None, bad
+    family = _parse_family(font_path)
+    if not family:
+        bad.append((0, f"could not parse family name from {font_file}"))
+        return None, bad
+    sha, size = _file_sha256(font_path)
+    return {
+        "displayName": display,
+        "pageCount": page_count,
+        "fontDir": font_dir,
+        "familyPattern": None,
+        "tajweedColored": cfg["tajweedColored"],
+        "fontCount": 1,
+        "totalSizeBytes": size,
+        "wordsDb": _words_db_block(cfg["wordsDb"]),
+        "singleFont": {
+            "filename": font_file,
+            "family": family,
+            "sha256": sha,
+            "sizeBytes": size,
+        },
+        # Empty per-page list is the explicit signal to v4 parsers that this
+        # variant is single-font-only. v3 parsers will reject the manifest
+        # outright via the schemaVersion check.
+        "fonts": [],
+    }, bad
+
+
+def _build_variant(variant_id, cfg):
+    mode = cfg["mode"]
+    if mode == "per_page":
+        return _build_per_page_variant(cfg)
+    elif mode == "single_font":
+        return _build_single_font_variant(cfg)
+    else:
+        raise ValueError(f"unknown variant mode {mode!r} for {variant_id}")
+
+
 def _parse_args(argv):
     parser = argparse.ArgumentParser(
-        description="Build manifest.json (schemaVersion 3) for qari-assets.",
+        description="Build manifest.json (schemaVersion 4) for qari-assets.",
     )
     parser.add_argument(
         "--ref",
@@ -203,7 +314,7 @@ def _parse_args(argv):
         default=os.environ.get("QARI_ASSETS_RELEASE_TAG", _DEFAULT_RELEASE_TAG),
         help=(
             "Value for the manifest's `releaseTag` field "
-            "(e.g. v1.3.0). Falls back to the QARI_ASSETS_RELEASE_TAG env "
+            "(e.g. v1.4.0). Falls back to the QARI_ASSETS_RELEASE_TAG env "
             f"var, then to {_DEFAULT_RELEASE_TAG!r}."
         ),
     )
@@ -219,15 +330,16 @@ def main(argv=None):
     print(f"  releaseTag: {args.release_tag}")
     variants = {}
     all_bad = []
-    for vid, (display, font_dir, pattern, colored,
-              words_db_filename) in _VARIANTS.items():
-        v, bad = _build_variant(vid, display, font_dir, pattern, colored,
-                                words_db_filename)
+    for vid, cfg in _VARIANTS.items():
+        v, bad = _build_variant(vid, cfg)
         all_bad.extend((vid, p, why) for p, why in bad)
+        if v is None:
+            continue
         variants[vid] = v
         wb = v["wordsDb"]
-        print(f"  {vid}: {v['fontCount']} fonts, "
-              f"{v['totalSizeBytes'] / 1024 / 1024:.1f} MB; "
+        mode_marker = "1×" if cfg["mode"] == "single_font" else f"{v['fontCount']}×"
+        print(f"  {vid}: {mode_marker} fonts, "
+              f"{v['totalSizeBytes'] / 1024 / 1024:.2f} MB; "
               f"wordsDb {wb['filename']} ({wb.get('rowCount','?')} rows)")
 
     if all_bad:
@@ -239,13 +351,13 @@ def main(argv=None):
     license_path = os.path.join(REPO_ROOT, LICENSE_FILE)
     license_sha, license_size = _file_sha256(license_path)
 
-    # Top-level wordsDb for schemaVersion-2 client back-compat. New clients
-    # on v3 ignore this and read each variant's own wordsDb block.
-    backcompat_filename = _VARIANTS[_BACKCOMPAT_WORDS_DB_VARIANT][4]
+    # Top-level wordsDb for schemaVersion-2/3 client back-compat. New clients
+    # on v4 ignore this and read each variant's own wordsDb block.
+    backcompat_filename = _VARIANTS[_BACKCOMPAT_WORDS_DB_VARIANT]["wordsDb"]
     top_level_words_db = _words_db_block(backcompat_filename)
 
     manifest = {
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "releaseTag": args.release_tag,
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "baseUrl": base_url,
