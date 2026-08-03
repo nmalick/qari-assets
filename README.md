@@ -9,6 +9,7 @@ versioned and released independently.
 |---|---|
 | `fonts/` | Quranic fonts (e.g. DigitalKhatt v1/v2, KFGQPC Nastaleeq, per-page mushaf fonts) |
 | `QCF_*.ttf` | Surah header / glyph fonts |
+| `surah_names.ttf`, `surah-name-v4.ttf`, `quran-common.ttf` | Root utility fonts — tracked but **not referenced by `manifest.json`** (see `project-os/engineering/architecture.md`, Data layer → unmanifested root assets / Gotcha 8) |
 | `_fetch_*.py`, `_build_manifest.py` | Scripts to fetch and build asset manifests |
 | `.github/workflows/` | Automated release workflow |
 
