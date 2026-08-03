@@ -1,0 +1,40 @@
+{
+  "enabledPlugins": {
+    "posthog@claude-plugins-official": false
+  },
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(gh api repos/nmalick/*)",
+      "Bash(gh api user:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(python3:*)",
+      "Bash(rg:*)"
+    ],
+    "deny": [
+      "Read(**/.env*)",
+      "Write(**/.env*)",
+      "Edit(**/.env*)",
+      "Read(**/firebase-service-account*.json)",
+      "Write(**/firebase-service-account*.json)",
+      "Edit(**/firebase-service-account*.json)",
+      "Read(**/*.keystore)",
+      "Write(**/*.keystore)",
+      "Edit(**/*.keystore)",
+      "Read(**/*.jks)",
+      "Write(**/*.jks)",
+      "Edit(**/*.jks)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh pr close:*)",
+      "Bash(gh repo delete:*)",
+      "Bash(git push --force:*)"
+    ]
+  }
+}

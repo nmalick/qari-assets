@@ -1,4 +1,7 @@
-.claude/
 .DS_Store
 __pycache__/
 *.pyc
+
+# Claude Code: track only the shared project settings; everything else in .claude/ is machine-local
+.claude/*
+!.claude/settings.json
