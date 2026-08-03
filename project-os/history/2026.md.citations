@@ -1,0 +1,125 @@
+project-os/history/2026.md:23 -> commit 4f8972d
+project-os/history/2026.md:23 -> commit a68ae3c
+project-os/history/2026.md:24 -> tag qari-assets-7
+project-os/history/2026.md:24 -> manifest.json:2
+project-os/history/2026.md:31 -> commit 4f8972d
+project-os/history/2026.md:32 -> commit 791ee7c
+project-os/history/2026.md:33 -> commit fdb32da
+project-os/history/2026.md:34 -> commit fdb32da
+project-os/history/2026.md:35 -> commit 0a367e7
+project-os/history/2026.md:36 -> commit bfc84c3
+project-os/history/2026.md:37 -> commit 744521e
+project-os/history/2026.md:38 -> commit 37ef690
+project-os/history/2026.md:39 -> commit 998b7e8
+project-os/history/2026.md:40 -> commit d465a9b
+project-os/history/2026.md:41 -> commit f614411
+project-os/history/2026.md:42 -> commit 4de5d8c
+project-os/history/2026.md:43 -> commit 186b5fe
+project-os/history/2026.md:44 -> commit ba9dd9e
+project-os/history/2026.md:45 -> commit b51d07b
+project-os/history/2026.md:46 -> commit 407d8ae
+project-os/history/2026.md:50 -> commit 4f8972d
+project-os/history/2026.md:53 -> tag qari-assets-7
+project-os/history/2026.md:55 -> .github/workflows/auto-release.yml:16
+project-os/history/2026.md:56 -> commit 4f8972d
+project-os/history/2026.md:56 -> tag qari-assets-7
+project-os/history/2026.md:56 -> .github/workflows/auto-release.yml:16
+project-os/history/2026.md:58 -> commit 791ee7c
+project-os/history/2026.md:63 -> .github/workflows/auto-release.yml:9
+project-os/history/2026.md:65 -> .github/workflows/auto-release.yml:33
+project-os/history/2026.md:66 -> .github/workflows/auto-release.yml:46
+project-os/history/2026.md:68 -> commit 791ee7c
+project-os/history/2026.md:69 -> commit 791ee7c
+project-os/history/2026.md:69 -> commit a031010
+project-os/history/2026.md:69 -> .github/workflows/auto-release.yml:33
+project-os/history/2026.md:70 -> .github/workflows/auto-release.yml:46
+project-os/history/2026.md:70 -> .github/workflows/auto-release.yml:62
+project-os/history/2026.md:72 -> commit fdb32da
+project-os/history/2026.md:77 -> _build_manifest.py:71
+project-os/history/2026.md:78 -> _build_manifest.py:78
+project-os/history/2026.md:79 -> manifest.json:2
+project-os/history/2026.md:81 -> commit fdb32da
+project-os/history/2026.md:81 -> commit a0dc7a1
+project-os/history/2026.md:81 -> manifest.json:2
+project-os/history/2026.md:81 -> _build_manifest.py:71
+project-os/history/2026.md:82 -> _build_manifest.py:78
+project-os/history/2026.md:84 -> commit fdb32da
+project-os/history/2026.md:89 -> commit fdb32da
+project-os/history/2026.md:91 -> commit 0a367e7
+project-os/history/2026.md:94 -> _build_manifest.py:68
+project-os/history/2026.md:98 -> commit 0a367e7
+project-os/history/2026.md:98 -> commit 2478555
+project-os/history/2026.md:98 -> _build_manifest.py:68
+project-os/history/2026.md:100 -> commit bfc84c3
+project-os/history/2026.md:110 -> commit bfc84c3
+project-os/history/2026.md:110 -> commit c0d6d74
+project-os/history/2026.md:112 -> commit 744521e
+project-os/history/2026.md:116 -> commit 744521e
+project-os/history/2026.md:116 -> tag qari-assets-4
+project-os/history/2026.md:118 -> commit 37ef690
+project-os/history/2026.md:125 -> commit 37ef690
+project-os/history/2026.md:125 -> commit 9ff1baf
+project-os/history/2026.md:127 -> commit 998b7e8
+project-os/history/2026.md:133 -> commit cbdfa90
+project-os/history/2026.md:134 -> commit 998b7e8
+project-os/history/2026.md:134 -> commit c9209b7
+project-os/history/2026.md:134 -> commit cbdfa90
+project-os/history/2026.md:136 -> commit d465a9b
+project-os/history/2026.md:139 -> commit bfc84c3
+project-os/history/2026.md:142 -> commit d465a9b
+project-os/history/2026.md:142 -> commit 75ca4e9
+project-os/history/2026.md:142 -> commit bfc84c3
+project-os/history/2026.md:144 -> commit f614411
+project-os/history/2026.md:151 -> commit f614411
+project-os/history/2026.md:151 -> commit a68ae3c
+project-os/history/2026.md:151 -> tag qari-assets
+project-os/history/2026.md:153 -> commit 4de5d8c
+project-os/history/2026.md:157 -> commit 4de5d8c
+project-os/history/2026.md:159 -> commit 186b5fe
+project-os/history/2026.md:166 -> commit 186b5fe
+project-os/history/2026.md:168 -> commit ba9dd9e
+project-os/history/2026.md:171 -> _fetch_v4_tajweed.py:15
+project-os/history/2026.md:175 -> commit ba9dd9e
+project-os/history/2026.md:175 -> _fetch_v4_tajweed.py:15
+project-os/history/2026.md:177 -> commit b51d07b
+project-os/history/2026.md:183 -> commit b51d07b
+project-os/history/2026.md:185 -> commit 407d8ae
+project-os/history/2026.md:189 -> commit 407d8ae
+project-os/history/2026.md:189 -> commit 68e0200
+project-os/history/2026.md:189 -> commit 4f5cbe6
+project-os/history/2026.md:194 -> INFERRED
+project-os/history/2026.md:194 -> commit b51d07b
+project-os/history/2026.md:195 -> commit b51d07b
+project-os/history/2026.md:195 -> commit 186b5fe
+project-os/history/2026.md:195 -> commit bfc84c3
+project-os/history/2026.md:196 -> commit 998b7e8
+project-os/history/2026.md:196 -> manifest.json:12
+project-os/history/2026.md:197 -> commit bfc84c3
+project-os/history/2026.md:197 -> commit fdb32da
+project-os/history/2026.md:197 -> manifest.json:6
+project-os/history/2026.md:198 -> commit bfc84c3
+project-os/history/2026.md:199 -> commit 0a367e7
+project-os/history/2026.md:199 -> _build_manifest.py:68
+project-os/history/2026.md:200 -> commit fdb32da
+project-os/history/2026.md:200 -> _build_manifest.py:71
+project-os/history/2026.md:201 -> commit 791ee7c
+project-os/history/2026.md:201 -> .github/workflows/auto-release.yml:9
+project-os/history/2026.md:201 -> .github/workflows/auto-release.yml:87
+project-os/history/2026.md:202 -> commit 791ee7c
+project-os/history/2026.md:202 -> manifest.json:5
+project-os/history/2026.md:203 -> INFERRED
+project-os/history/2026.md:203 -> .github/workflows/auto-release.yml:16
+project-os/history/2026.md:203 -> commit 4f8972d
+project-os/history/2026.md:204 -> INFERRED
+project-os/history/2026.md:204 -> commit f614411
+project-os/history/2026.md:209 -> commit 4f8972d
+project-os/history/2026.md:215 -> commit 4f8972d
+project-os/history/2026.md:216 -> commit 0497919
+project-os/history/2026.md:217 -> commit bfc84c3
+project-os/history/2026.md:217 -> commit fdb32da
+project-os/history/2026.md:218 -> .github/workflows/auto-release.yml:16
+project-os/history/2026.md:219 -> commit 791ee7c
+project-os/history/2026.md:219 -> manifest.json:5
+project-os/history/2026.md:220 -> INFERRED
+project-os/history/2026.md:220 -> tag qari-assets-4
+project-os/history/2026.md:220 -> .github/workflows/auto-release.yml:9

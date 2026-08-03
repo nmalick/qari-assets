@@ -1,0 +1,105 @@
+project-os/history/CHANGELOG.md:26 -> tag qari-assets-5
+project-os/history/CHANGELOG.md:27 -> tag qari-assets-6
+project-os/history/CHANGELOG.md:27 -> tag qari-assets-7
+project-os/history/CHANGELOG.md:34 -> commit 4f8972d
+project-os/history/CHANGELOG.md:37 -> INFERRED
+project-os/history/CHANGELOG.md:37 -> tag qari-assets-7
+project-os/history/CHANGELOG.md:38 -> tag qari-assets-7
+project-os/history/CHANGELOG.md:39 -> commit 4f8972d
+project-os/history/CHANGELOG.md:41 -> commit 4f8972d
+project-os/history/CHANGELOG.md:43 -> commit 791ee7c
+project-os/history/CHANGELOG.md:44 -> commit 4f8972d
+project-os/history/CHANGELOG.md:45 -> commit 4f8972d
+project-os/history/CHANGELOG.md:45 -> tag qari-assets-7
+project-os/history/CHANGELOG.md:47 -> INFERRED
+project-os/history/CHANGELOG.md:47 -> tag qari-assets-6
+project-os/history/CHANGELOG.md:48 -> commit a031010
+project-os/history/CHANGELOG.md:48 -> commit a0dc7a1
+project-os/history/CHANGELOG.md:48 -> commit 2478555
+project-os/history/CHANGELOG.md:51 -> commit fdb32da
+project-os/history/CHANGELOG.md:53 -> commit fdb32da
+project-os/history/CHANGELOG.md:54 -> _build_manifest.py:71
+project-os/history/CHANGELOG.md:56 -> commit 791ee7c
+project-os/history/CHANGELOG.md:57 -> .github/workflows/auto-release.yml:46
+project-os/history/CHANGELOG.md:58 -> commit 0a367e7
+project-os/history/CHANGELOG.md:58 -> _build_manifest.py:68
+project-os/history/CHANGELOG.md:61 -> manifest.json:2
+project-os/history/CHANGELOG.md:63 -> commit fdb32da
+project-os/history/CHANGELOG.md:65 -> commit 0a367e7
+project-os/history/CHANGELOG.md:66 -> commit fdb32da
+project-os/history/CHANGELOG.md:66 -> commit 791ee7c
+project-os/history/CHANGELOG.md:66 -> commit 0a367e7
+project-os/history/CHANGELOG.md:66 -> commit a031010
+project-os/history/CHANGELOG.md:66 -> commit a0dc7a1
+project-os/history/CHANGELOG.md:67 -> commit 2478555
+project-os/history/CHANGELOG.md:67 -> tag qari-assets-6
+project-os/history/CHANGELOG.md:69 -> INFERRED
+project-os/history/CHANGELOG.md:69 -> tag qari-assets-5
+project-os/history/CHANGELOG.md:70 -> commit c0d6d74
+project-os/history/CHANGELOG.md:72 -> commit bfc84c3
+project-os/history/CHANGELOG.md:74 -> commit bfc84c3
+project-os/history/CHANGELOG.md:77 -> commit bfc84c3
+project-os/history/CHANGELOG.md:79 -> commit bfc84c3
+project-os/history/CHANGELOG.md:81 -> commit bfc84c3
+project-os/history/CHANGELOG.md:84 -> commit bfc84c3
+project-os/history/CHANGELOG.md:86 -> commit bfc84c3
+project-os/history/CHANGELOG.md:86 -> commit c0d6d74
+project-os/history/CHANGELOG.md:86 -> tag qari-assets-5
+project-os/history/CHANGELOG.md:88 -> INFERRED
+project-os/history/CHANGELOG.md:88 -> tag qari-assets-4
+project-os/history/CHANGELOG.md:89 -> commit 744521e
+project-os/history/CHANGELOG.md:91 -> commit 744521e
+project-os/history/CHANGELOG.md:94 -> .github/workflows/auto-release.yml:9
+project-os/history/CHANGELOG.md:95 -> tag qari-assets-4
+project-os/history/CHANGELOG.md:97 -> commit 744521e
+project-os/history/CHANGELOG.md:97 -> tag qari-assets-4
+project-os/history/CHANGELOG.md:97 -> .github/workflows/auto-release.yml:9
+project-os/history/CHANGELOG.md:99 -> INFERRED
+project-os/history/CHANGELOG.md:99 -> tag qari-assets-3
+project-os/history/CHANGELOG.md:100 -> commit 9ff1baf
+project-os/history/CHANGELOG.md:102 -> commit 37ef690
+project-os/history/CHANGELOG.md:105 -> commit 37ef690
+project-os/history/CHANGELOG.md:107 -> commit 37ef690
+project-os/history/CHANGELOG.md:108 -> commit 37ef690
+project-os/history/CHANGELOG.md:110 -> commit 37ef690
+project-os/history/CHANGELOG.md:112 -> commit 37ef690
+project-os/history/CHANGELOG.md:112 -> commit 9ff1baf
+project-os/history/CHANGELOG.md:112 -> tag qari-assets-3
+project-os/history/CHANGELOG.md:114 -> INFERRED
+project-os/history/CHANGELOG.md:114 -> tag qari-assets-2
+project-os/history/CHANGELOG.md:115 -> commit c9209b7
+project-os/history/CHANGELOG.md:118 -> commit 998b7e8
+project-os/history/CHANGELOG.md:119 -> commit 998b7e8
+project-os/history/CHANGELOG.md:120 -> commit cbdfa90
+project-os/history/CHANGELOG.md:121 -> commit d465a9b
+project-os/history/CHANGELOG.md:121 -> commit 75ca4e9
+project-os/history/CHANGELOG.md:123 -> commit 998b7e8
+project-os/history/CHANGELOG.md:127 -> commit 998b7e8
+project-os/history/CHANGELOG.md:127 -> commit cbdfa90
+project-os/history/CHANGELOG.md:127 -> commit d465a9b
+project-os/history/CHANGELOG.md:127 -> commit 75ca4e9
+project-os/history/CHANGELOG.md:127 -> commit c9209b7
+project-os/history/CHANGELOG.md:128 -> tag qari-assets-2
+project-os/history/CHANGELOG.md:130 -> INFERRED
+project-os/history/CHANGELOG.md:130 -> tag qari-assets
+project-os/history/CHANGELOG.md:131 -> commit a68ae3c
+project-os/history/CHANGELOG.md:134 -> commit ba9dd9e
+project-os/history/CHANGELOG.md:136 -> commit ba9dd9e
+project-os/history/CHANGELOG.md:138 -> commit ba9dd9e
+project-os/history/CHANGELOG.md:138 -> _fetch_v4_tajweed.py:15
+project-os/history/CHANGELOG.md:140 -> commit 186b5fe
+project-os/history/CHANGELOG.md:142 -> commit f614411
+project-os/history/CHANGELOG.md:144 -> commit b51d07b
+project-os/history/CHANGELOG.md:146 -> commit b51d07b
+project-os/history/CHANGELOG.md:147 -> commit 4de5d8c
+project-os/history/CHANGELOG.md:150 -> commit f614411
+project-os/history/CHANGELOG.md:153 -> commit ba9dd9e
+project-os/history/CHANGELOG.md:153 -> commit 186b5fe
+project-os/history/CHANGELOG.md:153 -> commit f614411
+project-os/history/CHANGELOG.md:153 -> commit b51d07b
+project-os/history/CHANGELOG.md:153 -> commit 4de5d8c
+project-os/history/CHANGELOG.md:154 -> commit 407d8ae
+project-os/history/CHANGELOG.md:154 -> commit 68e0200
+project-os/history/CHANGELOG.md:154 -> commit 4f5cbe6
+project-os/history/CHANGELOG.md:154 -> commit a68ae3c
+project-os/history/CHANGELOG.md:154 -> tag qari-assets
