@@ -35,6 +35,18 @@
       "Bash(gh pr close:*)",
       "Bash(gh repo delete:*)",
       "Bash(git push --force:*)"
+    ],
+    "ask": [
+      "Edit(_*.py)",
+      "Write(_*.py)",
+      "Edit(fonts/**)",
+      "Write(fonts/**)",
+      "Edit(*.db)",
+      "Write(*.db)",
+      "Edit(*.ttf)",
+      "Write(*.ttf)",
+      "Edit(manifest.json)",
+      "Write(manifest.json)"
     ]
   }
 }
