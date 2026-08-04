@@ -13,16 +13,18 @@ name: Auto-tag + release on main
 on:
   push:
     branches: [main]
-    # Optional path filter — uncomment to skip releases on doc-only commits.
-    # When enabled, README tweaks and build-script changes won't burn a
-    # tag number. Asset/manifest changes will still trigger a release.
-    # paths:
-    #   - 'manifest.json'
-    #   - 'fonts/**'
-    #   - 'qpc-*.db'
-    #   - '*.ttf'
-    #   - '*.otf'
-    #   - 'LICENSE.txt'
+    # Path filter (enabled 2026-08 after two doc/config-only merges each
+    # burned a tag number — the [skip release] commit-message guard relies
+    # on typing the marker into the merge subject at merge time, which
+    # failed twice). Releases now cut only when published bytes change;
+    # workflow_dispatch remains the manual fallback for anything else.
+    paths:
+      - 'manifest.json'
+      - 'fonts/**'
+      - 'qpc-*.db'
+      - '*.ttf'
+      - '*.otf'
+      - 'LICENSE.txt'
   # Manual fallback for backfilling missed releases or recovering from
   # an aborted run. Same behavior as a push.
   workflow_dispatch:
